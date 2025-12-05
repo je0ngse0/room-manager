@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +20,7 @@ public class ReservationService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
     private final StringRedisTemplate redisTemplate;
+    private final AvailabilityGroupDetailRepository availabilityGroupDetailRepository;
 
     private static final long LOCK_EXPIRE = 5; // seconds
 
@@ -39,11 +40,19 @@ public class ReservationService {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            // 운영시간 체크 / SpecialOverride 체크는 나중 구현 가능
+            int weekday = dto.getDate().getDayOfWeek().getValue() % 7;
+            LocalTime start = dto.getStartTime();
+            LocalTime end = dto.getEndTime();
+
+            validateAvailability(roomId, weekday, start, end);
 
             List<Reservation> existing = reservationRepository.findByRoomAndDate(room, dto.getDate());
             for (Reservation r : existing) {
-                if (!(dto.getEndTime().isBefore(r.getStartTime()) || dto.getStartTime().isAfter(r.getEndTime()))) {
+                boolean overlaps =
+                        dto.getStartTime().isBefore(r.getEndTime()) &&
+                                dto.getEndTime().isAfter(r.getStartTime());
+
+                if (overlaps) {
                     throw new IllegalArgumentException("Time slot already reserved");
                 }
             }
@@ -62,4 +71,23 @@ public class ReservationService {
             redisTemplate.delete(lockKey);
         }
     }
+
+    private void validateAvailability(Long roomId, int weekday, LocalTime start, LocalTime end) {
+
+        List<AvailabilityGroupDetail> details =
+                availabilityGroupDetailRepository.findByRoomIdAndWeekday(roomId, weekday);
+
+        if (details.isEmpty()) {
+            throw new IllegalStateException("No availability for this weekday");
+        }
+
+        boolean fits = details.stream().anyMatch(d ->
+                !start.isBefore(d.getOpenTime()) && !end.isAfter(d.getCloseTime())
+        );
+
+        if (!fits) {
+            throw new IllegalStateException("Reservation time is outside availability");
+        }
+    }
+
 }
