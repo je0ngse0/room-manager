@@ -7,6 +7,8 @@ import com.example.room_manager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class RoomService {
@@ -28,4 +30,15 @@ public class RoomService {
                 .build();
         return roomRepository.save(room);
     }
+
+    public List<Room> getAllRooms() {
+        return roomRepository.findAll();
+    }
+
+    public List<Room> getRoomsByOwner(Long ownerId) {
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
+        return roomRepository.findByOwner(owner);
+    }
+
 }

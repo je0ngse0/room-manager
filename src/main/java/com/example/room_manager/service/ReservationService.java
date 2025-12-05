@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -111,6 +112,24 @@ public class ReservationService {
         reservation.setUpdatedAt(LocalDateTime.now());
 
         return reservationRepository.save(reservation);
+    }
+
+    public List<Reservation> getReservationsByRoom(Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+        return reservationRepository.findByRoom(room);
+    }
+
+    public List<Reservation> getReservationsByUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return reservationRepository.findByUser(user);
+    }
+
+    public List<Reservation> getReservationsByRoomAndDate(Long roomId, LocalDate date) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+        return reservationRepository.findByRoomAndDate(room, date);
     }
 
 

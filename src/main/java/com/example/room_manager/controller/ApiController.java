@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -120,5 +121,39 @@ public class ApiController {
         return ResponseEntity.ok(r);
     }
 
+    /** 전체 방 목록 **/
+    @GetMapping("/rooms")
+    public ResponseEntity<?> getAllRooms() {
+        return ResponseEntity.ok(roomService.getAllRooms());
+    }
+
+    /** 특정 OWNER의 방 목록 **/
+    @GetMapping("/rooms/my")
+    public ResponseEntity<?> getMyRooms(@RequestHeader("X-USER-ID") Long ownerId) {
+        return ResponseEntity.ok(roomService.getRoomsByOwner(ownerId));
+    }
+
+    /** 날짜 필터 (YYYY-MM-DD) **/
+    @GetMapping("/rooms/{roomId}/reservations")
+    public ResponseEntity<?> getRoomReservations(
+            @PathVariable Long roomId,
+            @RequestParam(required = false) String date) {
+
+        if (date == null) {
+            return ResponseEntity.ok(reservationService.getReservationsByRoom(roomId));
+        }
+
+        return ResponseEntity.ok(
+                reservationService.getReservationsByRoomAndDate(roomId, LocalDate.parse(date))
+        );
+    }
+
+    /** 특정 user의 예약 목록 **/
+    @GetMapping("/users/me/reservations")
+    public ResponseEntity<?> getMyReservations(
+            @RequestHeader("USER-ID") Long userId) {
+
+        return ResponseEntity.ok(reservationService.getReservationsByUser(userId));
+    }
 
 }
