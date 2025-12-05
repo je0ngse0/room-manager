@@ -111,4 +111,14 @@ public class ApiController {
         return ResponseEntity.ok(res);
     }
 
+    @PostMapping("/reservations/{reservationId}/cancel")
+    public ResponseEntity<?> cancelReservation(
+            @PathVariable Long id,
+            @RequestHeader("USER-ID") Long requesterId) {
+
+        Reservation r = reservationService.cancelReservation(id, requesterId);
+        return ResponseEntity.ok(r);
+    }
+
+
 }

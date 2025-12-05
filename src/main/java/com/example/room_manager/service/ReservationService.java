@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -89,5 +90,28 @@ public class ReservationService {
             throw new IllegalStateException("Reservation time is outside availability");
         }
     }
+
+    @Transactional
+    public Reservation cancelReservation(Long reservationId, Long requesterId) {
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found"));
+
+        User requester = userRepository.findById(requesterId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        boolean isOwner = reservation.getRoom().getOwner().getUserId().equals(requesterId);
+        boolean isUser = reservation.getUser().getUserId().equals(requesterId);
+
+        if (!isOwner && !isUser) {
+            throw new IllegalStateException("You cannot cancel this reservation");
+        }
+
+        reservation.setStatus(Reservation.Status.CANCELED);
+        reservation.setUpdatedAt(LocalDateTime.now());
+
+        return reservationRepository.save(reservation);
+    }
+
 
 }

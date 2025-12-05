@@ -45,5 +45,5 @@ public class Reservation {
         updatedAt = LocalDateTime.now();
     }
 
-    public enum Status { RESERVED, CANCELLED }
+    public enum Status { RESERVED, CANCELED }
 }
