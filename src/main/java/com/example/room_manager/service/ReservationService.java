@@ -42,7 +42,7 @@ public class ReservationService {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            int weekday = dto.getDate().getDayOfWeek().getValue() % 7;
+            int weekday = dto.getDate().getDayOfWeek().getValue();
             LocalTime start = dto.getStartTime();
             LocalTime end = dto.getEndTime();
 
